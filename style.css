@@ -1,6 +1,6 @@
 body {
   background: linear-gradient(135deg, #2e3a87, #1e90ff);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   height: 100vh;
   display: flex;
@@ -12,7 +12,7 @@ body {
   background: #f0f8ff;
   padding: 30px 40px;
   border-radius: 20px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 0.2);
   text-align: center;
   width: 420px;
   user-select: none;
@@ -32,9 +32,9 @@ h1 {
 .card {
   width: 60px;
   height: 90px;
-  background: white;
+  background: #ffffff;
   border-radius: 8px;
-  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+  box-shadow: 0 3px 6px rgb(0 0 0 / 0.2);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -42,12 +42,22 @@ h1 {
   cursor: pointer;
   user-select: none;
   position: relative;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card.selected {
   transform: translateY(-15px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+  box-shadow: 0 6px 12px rgb(0 0 0 / 0.4);
+}
+
+.card.hold {
+  transform: translateY(-10px);
+  box-shadow: 0 6px 12px #ffcc5b;
+  border: 2px solid #ffcc5b;
+}
+
+.card.red {
+  color: #c62828;
 }
 
 .card .top-left,
@@ -65,14 +75,21 @@ h1 {
   transform: rotate(180deg);
 }
 
-.card.red {
-  color: #c62828;
+.hidden {
+  display: none;
+}
+
+#result {
+  margin-top: 20px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #0d47a1;
 }
 
 button {
   background-color: #1565c0;
   border: none;
-  color: white;
+  color: #ffffff;
   padding: 12px 24px;
   border-radius: 12px;
   font-size: 16px;
@@ -90,13 +107,11 @@ button:hover:not(:disabled) {
   background-color: #0d47a1;
 }
 
-#result {
-  margin-top: 20px;
-  font-size: 18px;
-  font-weight: bold;
-  color: #0d47a1;
-}
-
-.hidden {
-  display: none;
-}
+@keyframes pulse {
+  0% {
+    color: #0288d1;
+    text-shadow: 0 0 5px #0288d1;
+  }
+  100% {
+    color: #29b6f6;
+    text-shadow: 0 0 15px #2
