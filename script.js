@@ -1,74 +1,78 @@
 const suits = ['♠', '♥', '♦', '♣'];
-const ranks = [
-  '2', '3', '4', '5', '6', '7', '8', '9', '10',
-  'J', 'Q', 'K', 'A'
-];
+const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 
-let deck = [];
-let hand = [];
+let deck = []; 
+let hand = []; 
+let holdIndices = new Set();
 let selectedIndices = new Set();
 
 const cardsDiv = document.getElementById('cards');
 const dealBtn = document.getElementById('deal-btn');
 const drawBtn = document.getElementById('draw-btn');
-const resultDiv = document.getElementById('result');
+const resultEl = document.getElementById('result');
 
 function createDeck() {
-  deck = [];
+  deck = []; 
   for (const suit of suits) {
     for (const rank of ranks) {
-      deck.push({suit, rank});
+      deck.push({suit, rank}); 
     }
   }
 }
 
-function shuffleDeck() {
+function shuffleDeck(){
   for (let i = deck.length -1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i+1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
+    const j = Math.floor(Math.random() * (i+1)); 
+    [deck[i], deck[j]] = [deck[j], deck[i]]; 
   }
 }
 
-function dealHand() {
-  hand = [];
+function dealHand(){
+  hand = []; 
+  holdIndices.clear();
   selectedIndices.clear();
-  for (let i=0; i<5; i++) {
-    hand.push(deck.pop());
+
+  for (let i = 0; i < 5; i++) {
+    hand.push(deck.pop()); 
   }
 }
 
-function renderHand() {
+function renderHand(){
   cardsDiv.innerHTML = '';
+  
   hand.forEach((card, idx) => {
-    const cardEl = document.createElement('div');
-    cardEl.classList.add('card');
-    if (selectedIndices.has(idx)) cardEl.classList.add('selected');
-    if (card.suit === '♥' || card.suit === '♦') cardEl.classList.add('red');
+    const cardEl = document.createElement('div'); 
+    cardEl.classList.add('card'); 
+    if (holdIndices.has(idx)) cardEl.classList.add('hold'); 
+    if (selectedIndices.has(idx)) cardEl.classList.add('selected'); 
+    if (card.suit === '♥' ||
+        card.suit === '♦') cardEl.classList.add('red'); 
+ 
     cardEl.innerHTML = `
       <div class="top-left">${card.rank}${card.suit}</div>
       <div class="bottom-right">${card.rank}${card.suit}</div>
     `;
     cardEl.addEventListener('click', () => {
-      if (!drawBtn.disabled) {
-        if (selectedIndices.has(idx)) {
-          selectedIndices.delete(idx);
-        } else {
-          selectedIndices.add(idx);
-        }
-        renderHand();
+      if (drawBtn.disabled) return;
+
+      if (holdIndices.has(idx)) {
+        holdIndices.delete(idx);
+      } else {
+        holdIndices.add(idx);
       }
+      renderHand();
     });
+
     cardsDiv.appendChild(cardEl);
   });
 }
 
-function replaceSelectedCards() {
-  for (const idx of selectedIndices) {
-    if (deck.length > 0) {
+function replaceHand(){
+  for (let idx = 0; idx < hand.length; idx++) {
+    if (!holdIndices.has(idx) && deck.length > 0) {
       hand[idx] = deck.pop();
     }
   }
-  selectedIndices.clear();
 }
 
 function getRankValue(rank) {
@@ -85,37 +89,39 @@ function isFlush(cards) {
 }
 
 function isStraight(cards) {
-  const vals = cards.map(c => getRankValue(c.rank)).sort((a,b) => a-b);
-  for(let i=1; i<vals.length; i++) {
-    if (vals[i] !== vals[i-1] +1) return false;
+  const values = cards.map(getRankValue).sort((a, b) => a - b);
+  
+  for (let i = 1; i < values.length; i++) {
+    if (values[i] - values[i - 1] !== 1) return false;
   }
-  // A-2-3-4-5もストレート扱い（低いストレート）
-  if (vals.toString() === '2,3,4,5,14') return true;
+  
+  // A-2-3-4-5もストレート
+  if (JSON.stringify(values) === '[2,3,4,5,14]') return true;
+
   return true;
 }
 
 function countRanks(cards) {
   const counts = {};
-  for (const c of cards) {
-    counts[c.rank] = (counts[c.rank] || 0) + 1;
+  for (const card of cards) {
+    counts[card.rank] = (counts[card.rank] || 0) + 1;
   }
-  return counts;
+  return Object.values(counts).sort((a, b) => b - a);
 }
 
 function getHandRank(cards) {
-  cards = [...cards];
-  cards.sort((a,b) => getRankValue(b.rank) - getRankValue(a.rank));
+  cards = [...cards].sort((a, b) => getRankValue(b.rank) - getRankValue(a.rank));
 
-  const flush = isFlush(cards);
-  const straight = isStraight(cards);
-  const counts = Object.values(countRanks(cards)).sort((a,b) => b - a);
+  const isFl = isFlush(cards);
+  const isStr = isStraight(cards);
+  const counts = countRanks(cards);
 
-  if (straight && flush && getRankValue(cards[0].rank) === 14) return 'ロイヤルフラッシュ';
-  if (straight && flush) return 'ストレートフラッシュ';
+  if (isFl && isStr && getRankValue(cards[0].rank) === 14) return 'ロイヤルフラッシュ';
+  if (isFl && isStr) return 'ストレートフラッシュ';
   if (counts[0] === 4) return 'フォーカード';
   if (counts[0] === 3 && counts[1] === 2) return 'フルハウス';
-  if (flush) return 'フラッシュ';
-  if (straight) return 'ストレート';
+  if (isFl) return 'フラッシュ';
+  if (isStr) return 'ストレート';
   if (counts[0] === 3) return 'スリーカード';
   if (counts[0] === 2 && counts[1] === 2) return 'ツーペア';
   if (counts[0] === 2) return 'ワンペア';
@@ -129,18 +135,18 @@ dealBtn.addEventListener('click', () => {
   renderHand();
   dealBtn.disabled = true;
   drawBtn.disabled = false;
-  resultDiv.classList.add('hidden');
-  resultDiv.textContent = '';
+  resultEl.classList.add('hidden'); 
 });
 
+// 交换して結果も判定
 drawBtn.addEventListener('click', () => {
-  replaceSelectedCards();
+  replaceHand();
   renderHand();
+
   drawBtn.disabled = true;
   dealBtn.disabled = false;
 
-  // 役判定して表示
   const rank = getHandRank(hand);
-  resultDiv.textContent = `役: ${rank}`;
-  resultDiv.classList.remove('hidden');
+  resultEl.textContent = `あなたの役: ${rank}`;
+  resultEl.classList.remove('hidden'); 
 });
